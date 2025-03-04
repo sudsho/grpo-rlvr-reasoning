@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "grpo-rlvr-reasoning"
+version = "0.1.0"
+description = "GRPO + RLVR post-training on math and code with sandboxed verifiers"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Sudhanshu Srivastava", email = "48932266+sudsho@users.noreply.github.com"},
+]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+    "pytest-xdist>=3.6",
+    "ruff>=0.9",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -q"
