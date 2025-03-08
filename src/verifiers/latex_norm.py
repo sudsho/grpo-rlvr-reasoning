@@ -49,7 +49,10 @@ def normalize_latex(s: str) -> str:
     s = _sqrt(s)
     s = s.replace("\\pi", "pi")
     s = s.replace("\\cdot", "*").replace("\\times", "*")
+    s = s.replace("\\div", "/")
     s = s.replace("^", "**")
+    # a stray degree symbol at the end of an angle answer
+    s = s.replace("^{\\circ}", "").replace("\\circ", "").replace("°", "")
     # percentages: "50\%" or "50%" -> "(50/100)"
     s = re.sub(r"(-?\d+(?:\.\d+)?)\s*\\?%", r"(\1/100)", s)
     # commas as thousands separators
