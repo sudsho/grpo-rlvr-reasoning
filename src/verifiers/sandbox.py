@@ -5,10 +5,11 @@ robust. Order of preference:
 
 1. `firejail` if available (linux-only, cheap process-level jail).
 2. `docker run --rm --network=none --memory=... --cpus=... python:3.12-slim`
-   if the docker cli is available.
+   if the docker cli is available. See docs/repro.md for the image build.
 3. Plain `subprocess` with `resource.setrlimit` + wall-clock timeout + no
    network on the parent's side. This is the fallback used on dev boxes
-   and inside CI.
+   and inside CI. Note: on windows resource limits are best-effort; the
+   wall-clock timeout is the real backstop.
 
 Every backend has the same interface: `run(script, timeout, mem_mb)` ->
 `SandboxResult(exit_code, stdout, stderr, wall_time_ms, timed_out)`.
