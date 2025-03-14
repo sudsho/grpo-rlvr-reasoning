@@ -22,17 +22,19 @@ class RewardWeights:
     max_len_tokens: int = 1024
 
 
-def length_penalty(response: str, max_len_tokens: int) -> float:
-    """Rough proxy: characters / 4 as token count (Qwen tokenizer is close).
+def length_penalty(response: str, max_len_tokens: int, soft_start: float = 0.75) -> float:
+    """Piecewise: 0 up to soft_start * cap, linear ramp to -1 at cap, floor -1.
 
-    Returns a non-positive number scaled to [-1, 0]. Anything under the
-    cap is 0; over the cap gets -1.
+    A hard cliff at the cap tends to make the model right-pad up to it.
+    The soft ramp discourages that.
     """
     approx_tokens = len(response) / 4.0
-    if approx_tokens <= max_len_tokens:
+    soft_thresh = soft_start * max_len_tokens
+    if approx_tokens <= soft_thresh:
         return 0.0
-    over = approx_tokens - max_len_tokens
-    return max(-1.0, -over / max_len_tokens)
+    over = approx_tokens - soft_thresh
+    ramp = max_len_tokens - soft_thresh
+    return max(-1.0, -over / ramp)
 
 
 def make_composite(
