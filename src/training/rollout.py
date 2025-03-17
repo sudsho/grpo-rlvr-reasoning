@@ -32,6 +32,16 @@ class RolloutBatch:
     samples: list[list[RolloutSample]]   # [B][G]
 
 
+def format_prompt(messages: list[dict], tokenizer) -> str:
+    """Wrap chat messages with the model's own chat template.
+
+    Kept here so both the vLLM and HF clients apply the same template.
+    """
+    return tokenizer.apply_chat_template(
+        messages, tokenize=False, add_generation_prompt=True
+    )
+
+
 class RolloutClient:
     """Abstract interface. Implementations: VLLMClient, HFClient."""
 
