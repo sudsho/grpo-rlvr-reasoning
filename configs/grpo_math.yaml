@@ -1,0 +1,40 @@
+model:
+  name: Qwen/Qwen2.5-Math-1.5B
+  dtype: bfloat16
+  trust_remote_code: true
+  attn_impl: flash_attention_2
+
+rollout:
+  engine: vllm
+  max_new_tokens: 1024
+  temperature: 1.0
+  top_p: 0.95
+  top_k: -1
+  group_size: 8
+  prompts_per_batch: 32
+  seed: 1234
+
+optim:
+  lr: 1.0e-6
+  beta1: 0.9
+  beta2: 0.95
+  weight_decay: 0.0
+  grad_clip: 1.0
+  kl_coef: 0.02
+  epsilon_clip: 0.2
+  warmup_steps: 20
+
+train:
+  domain: math
+  dataset: gsm8k
+  steps: 2000
+  save_every: 200
+  eval_every: 500
+  log_every: 5
+  out_dir: src/models/checkpoints/grpo_math
+  wandb_project: grpo-rlvr
+  wandb_run_name: math_v1
+  reward_weights_correctness: 1.0
+  reward_weights_format: 0.1
+  reward_weights_length: 0.005
+  reward_max_len_tokens: 1024
