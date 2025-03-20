@@ -1,0 +1,22 @@
+# SFT warmup config: teach the base model the <think>/boxed format
+# before we hand it to GRPO. Small dataset, few epochs.
+model:
+  name: Qwen/Qwen2.5-Math-1.5B
+  dtype: bfloat16
+  trust_remote_code: true
+
+data:
+  dataset: openr1_cot_traces_1k     # or your own curated dump
+  max_seq_len: 2048
+
+train:
+  epochs: 1
+  per_device_batch_size: 4
+  grad_accum_steps: 4
+  lr: 5.0e-6
+  weight_decay: 0.01
+  warmup_ratio: 0.03
+  save_every: 200
+  eval_every: 200
+  logging_steps: 5
+  out_dir: src/models/checkpoints/sft_warmup

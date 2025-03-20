@@ -1,0 +1,35 @@
+model:
+  name: Qwen/Qwen2.5-Coder-1.5B
+  dtype: bfloat16
+  trust_remote_code: true
+  attn_impl: flash_attention_2
+
+rollout:
+  engine: vllm
+  max_new_tokens: 1024
+  temperature: 0.9
+  top_p: 0.95
+  group_size: 8
+  prompts_per_batch: 16
+  seed: 1234
+
+optim:
+  lr: 1.0e-6
+  kl_coef: 0.03            # code loops are more prone to drift
+  epsilon_clip: 0.2
+  warmup_steps: 20
+
+train:
+  domain: code
+  dataset: mbpp
+  steps: 1500
+  save_every: 200
+  eval_every: 500
+  log_every: 5
+  out_dir: src/models/checkpoints/grpo_code
+  wandb_project: grpo-rlvr
+  wandb_run_name: code_v1
+  reward_weights_correctness: 1.0
+  reward_weights_format: 0.1
+  reward_weights_length: 0.005
+  reward_max_len_tokens: 1024
