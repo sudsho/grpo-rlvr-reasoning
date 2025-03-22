@@ -41,11 +41,15 @@ def extract_gold(solution: str) -> str:
 def extract_pred(response: str) -> str:
     """Extract predicted numeric answer from a model response.
 
-    Looks for a boxed answer first, then the last number in the text.
+    Looks for the LAST boxed answer first (a model that emits multiple
+    should be judged on its final one), then the last number in the text.
+    We saw the model gaming this during Mar 22 debug: it would print two
+    boxed answers, one very short guess and one longer wrong one, hoping
+    at least one matched.
     """
-    m = re.search(r"\\boxed\{([^}]+)\}", response)
-    if m:
-        inner = m.group(1)
+    boxed = list(re.finditer(r"\\boxed\{([^}]+)\}", response))
+    if boxed:
+        inner = boxed[-1].group(1)
         m2 = _LAST_NUM.search(inner)
         if m2:
             return _norm_number(m2.group(1))
