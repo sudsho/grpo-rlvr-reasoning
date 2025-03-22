@@ -29,3 +29,23 @@ text, so the model started emitting `<think>` inside the boxed answer
 to get the format bonus even without a proper thinking block. Tightened
 the regex to require the tag at the start of the response with exactly
 one closing tag.
+
+### Hack 3: two boxed answers
+
+Model started emitting `\boxed{small guess} ... \boxed{full derivation}`
+so the extractor (first-match) picked the guess but the derivation was
+what looked like reasoning. Fix: always take the LAST boxed answer.
+
+### Hack 4: KL drift
+
+At kl_coef=0.02 the policy drifted enough that vLLM sampling started
+diverging from the ref model in obvious ways (Chinese tokens appearing
+inside English math). Bumped kl_coef to 0.05. This trades some
+optimization headroom for stability.
+
+### What actually moved the needle
+
+Reward histogram in wandb went from bimodal-ish (0 and 0.15 clusters
+during the hacking phase) to properly bimodal (0 and 1 clusters) after
+the four fixes. Eval pass@1 on the held-out slice then started tracking
+train reward. Overnight run kicked off at ~23:00 with the fixes above.
