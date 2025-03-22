@@ -33,8 +33,10 @@ train:
   log_every: 5
   out_dir: src/models/checkpoints/grpo_math
   wandb_project: grpo-rlvr
-  wandb_run_name: math_v2
+  wandb_run_name: math_v3
   reward_weights_correctness: 1.0
   reward_weights_format: 0.1
-  reward_weights_length: 0.02   # bumped from 0.005 to fight lucky-guess hack
+  # 0.02 was too strong; the model started truncating think blocks to fit.
+  # 0.005 with the extractor+format fix seems to be a stable middle ground.
+  reward_weights_length: 0.005
   reward_max_len_tokens: 1024
