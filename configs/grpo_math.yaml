@@ -33,8 +33,8 @@ train:
   log_every: 5
   out_dir: src/models/checkpoints/grpo_math
   wandb_project: grpo-rlvr
-  wandb_run_name: math_v1
+  wandb_run_name: math_v2
   reward_weights_correctness: 1.0
   reward_weights_format: 0.1
-  reward_weights_length: 0.005
+  reward_weights_length: 0.02   # bumped from 0.005 to fight lucky-guess hack
   reward_max_len_tokens: 1024
