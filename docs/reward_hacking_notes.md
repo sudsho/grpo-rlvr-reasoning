@@ -20,4 +20,12 @@ positive advantage on any guess that happens to match, so it learned
 to guess short numbers.
 
 Fix candidate: length penalty. It was defined but weight was 0.0 in the
-first run. Bumping to 0.005.
+first run. Bumping to 0.005, then 0.02 after another round of samples.
+
+### Hack 2: format tag drift
+
+Format regex was too permissive. It matched `<think>` anywhere in the
+text, so the model started emitting `<think>` inside the boxed answer
+to get the format bonus even without a proper thinking block. Tightened
+the regex to require the tag at the start of the response with exactly
+one closing tag.
