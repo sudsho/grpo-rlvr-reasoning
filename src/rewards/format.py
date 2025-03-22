@@ -15,12 +15,21 @@ _THINK_ONE = re.compile(r"^\s*<think>(.*?)</think>", re.DOTALL)
 _HAS_BOXED = re.compile(r"\\boxed\{[^}]*\}")
 _HAS_CODE = re.compile(r"```(?:python)?\s*\n.*?```", re.DOTALL)
 
+# after the </think> tag we must see content (an answer), not just whitespace
+_MIN_ANSWER_CHARS = 3
+
 
 def _has_single_think(text: str) -> bool:
-    # exactly one closing tag, and it appears in the first block
-    if text.count("</think>") != 1:
+    # exactly one opening + one closing tag, and it appears in the first block
+    if text.count("<think>") != 1 or text.count("</think>") != 1:
         return False
-    return _THINK_ONE.match(text) is not None
+    m = _THINK_ONE.match(text)
+    if m is None:
+        return False
+    # need some post-think content, else the model is gaming the tag
+    _, end = m.span()
+    tail = text[end:].strip()
+    return len(tail) >= _MIN_ANSWER_CHARS
 
 
 def math_format_reward(response: str, meta: dict | None = None) -> float:
