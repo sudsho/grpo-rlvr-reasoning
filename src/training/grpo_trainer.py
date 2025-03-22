@@ -38,6 +38,7 @@ class StepStats:
     kl: float
     n_prompts: int
     n_samples: int
+    components: list[list[dict]] | None = None   # per-sample component breakdown
 
 
 class GRPOWrapper:
@@ -108,6 +109,7 @@ class GRPOWrapper:
             kl=float(stats.get("kl", 0.0)),
             n_prompts=len(prompts),
             n_samples=len(flat_rewards),
+            components=scored,
         )
 
 

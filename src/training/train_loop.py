@@ -115,14 +115,23 @@ def train(cfg: Config) -> None:
         if step % cfg.train.log_every == 0:
             log.info("step=%d reward=%.3f kl=%.4f", step, stats.reward_mean, stats.kl)
             if wandb.run is not None:
-                wandb.log(
-                    {
-                        "reward/mean": stats.reward_mean,
-                        "reward/std": stats.reward_std,
-                        "opt/kl": stats.kl,
-                    },
-                    step=step,
-                )
+                # Histogram of per-sample rewards, and per-component means.
+                # The histogram is the single most useful chart for spotting
+                # reward hacking: a bimodal split (0 and 1) means the model
+                # is either fully solving or fully failing; a fat middle
+                # bin means it's gaming the shaping terms.
+                per_sample_rewards = [
+                    r["reward"] for row in getattr(stats, "components", [])
+                    for r in row
+                ]
+                log_dict = {
+                    "reward/mean": stats.reward_mean,
+                    "reward/std": stats.reward_std,
+                    "opt/kl": stats.kl,
+                }
+                if per_sample_rewards:
+                    log_dict["reward/hist"] = wandb.Histogram(per_sample_rewards)
+                wandb.log(log_dict, step=step)
         if step and step % cfg.train.save_every == 0:
             trl_trainer.save_model(cfg.train.out_dir + f"/step-{step}")
         step += 1
