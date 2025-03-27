@@ -49,3 +49,30 @@ Reward histogram in wandb went from bimodal-ish (0 and 0.15 clusters
 during the hacking phase) to properly bimodal (0 and 1 clusters) after
 the four fixes. Eval pass@1 on the held-out slice then started tracking
 train reward. Overnight run kicked off at ~23:00 with the fixes above.
+
+## Mar 24 second run
+
+Second run finished. Reward reached 0.72 by step 800 and plateaued.
+Eval pass@1 tracked: GSM8K 0.612 -> 0.734 (+12 pts), MATH 0.184 -> 0.321
+(+14 pts). The MATH lift is the interesting one: the base model was
+under-solving MATH problems primarily because it wouldn't write out the
+last step of algebra; the format reward + correctness signal together
+seem to have pushed it to close that gap.
+
+## Ongoing risks
+
+- **Group size vs variance**: at G=8 the group-relative baseline is
+  noisy on prompts where all G rollouts fail or all G succeed. That
+  gives zero gradient (advantage is 0 across the group), which wastes
+  the step. We're currently just discarding those groups; a smarter
+  fix is off-policy resampling from a wider pool.
+- **Verifier false negatives on code**: a candidate that prints extra
+  debug output but is functionally correct still passes because we only
+  check exit code, not stdout. But a candidate that times out (say, an
+  O(n^2) loop on a large test) is scored 0 even if it would have been
+  correct given more time. We chose to accept that: reward = 0 on
+  timeout matches how a real user experiences a slow solution.
+- **Domain skew**: combined training (math + code together) hurts pure
+  math slightly compared to math-only training, likely because the code
+  domain has a shorter answer distribution which biases the length
+  penalty. Documented but not fixed yet.
