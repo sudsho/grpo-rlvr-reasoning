@@ -1,0 +1,37 @@
+services:
+  rollout:
+    build: .
+    command: bash scripts/serve_rollout_vllm.sh
+    environment:
+      MODEL: Qwen/Qwen2.5-Math-1.5B
+      GPU_MEM_UTIL: "0.85"
+      PORT: "8000"
+    ports:
+      - "8000:8000"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    ipc: host
+    shm_size: "32gb"
+
+  trainer:
+    build: .
+    depends_on:
+      - rollout
+    command: bash scripts/train_grpo.sh configs/grpo_math.yaml
+    environment:
+      NUM_GPUS: "3"
+      VLLM_URL: "http://rollout:8000/v1"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 3
+              capabilities: [gpu]
+    ipc: host
+    shm_size: "64gb"
