@@ -22,9 +22,10 @@ def test_pad_id_fill() -> None:
     prompts = [[1, 2, 3, 4], [5]]
     resps = [[9], [8, 8]]
     b = collate(prompts, resps, pad_id=-1)
-    # everything past sequence len is pad
-    assert b.input_ids[0, 5] == -1
-    assert b.attention_mask[0, 5] == 0
+    # row 1 is [5] + [8, 8] = len 3, padded out to T = 5; positions 3 and 4 are pad
+    assert b.input_ids[1, 3] == -1
+    assert b.input_ids[1, 4] == -1
+    assert b.attention_mask[1, 3] == 0
 
 
 def test_max_len_clip() -> None:

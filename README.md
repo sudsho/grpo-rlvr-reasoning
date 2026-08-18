@@ -7,6 +7,78 @@ Verifiable rewards from a sandboxed Python executor for code and an
 extract-then-compare verifier for math. Rollouts served by vLLM. Base
 model is Qwen2.5-Math-1.5B.
 
+## Quick start (tiny-CPU smoke, no GPU/download)
+
+The headline numbers below need a GPU (see "Compute footprint"). But the
+machinery (both verifiers, the rule-based/format/composite rewards, and one
+GRPO policy update) runs on CPU in seconds with no model download. This is
+what a clone-and-run person should try first:
+
+```bash
+pip install -e ".[dev]"     # torch, sympy, pytest, ruff (all CPU wheels)
+python scripts/smoke_cpu.py # or: make smoke
+pytest -q                   # 35 passed, 2 skipped
+```
+
+`scripts/smoke_cpu.py` runs the real verifiers + rewards over the bundled
+sample rollouts in `data/samples/`, then takes one GRPO-style step on a
+from-scratch 2-layer toy causal LM with a mocked rollout (no Qwen, no vLLM).
+Real output:
+
+```
+========================================================================
+1. MATH VERIFIER + REWARDS (bundled GSM8K + MATH rollouts)
+========================================================================
+
+[gsm8k_samples.jsonl]  (10 rollouts)
+   #        gold  verdict   reward  correct  format  reason
+   0          72     PASS    1.100      1.0     1.0  string match
+   ...
+   9         460     PASS    1.100      1.0     1.0  string match
+
+[math_samples.jsonl]  (5 rollouts)
+   3   8\sqrt{2}     PASS    1.100      1.0     1.0  string match
+
+  math verifier: 15/15 rollouts verified correct
+
+========================================================================
+2. CODE VERIFIER (sandboxed executor over bundled MBPP rollouts)
+========================================================================
+
+[mbpp_samples.jsonl]  (5 rollouts, run in sandbox)
+   #  verdict  reward     ms  expected  reason
+   0     PASS     1.0    140      True  ok
+   1     PASS     1.0    125      True  ok
+   2     FAIL     0.0    125     False  exit=1
+   3     PASS     1.0    109      True  ok
+   4     PASS     1.0    125      True  ok
+
+  code verifier: 4/5 rollouts pass their unit tests; 5/5 match the recorded verdict
+
+========================================================================
+3. TINY GRPO STEP (toy causal LM, mocked rollout, CPU)
+========================================================================
+
+  toy model: from-scratch 2-layer causal LM (byte tokenizer, d_model=32)
+  prompts: 3   group size: 4   samples: 12
+
+  per-group rewards -> group-relative advantages:
+    group 0: rewards=[1.100, 1.050, 0.100, 0.000]  adv=[+1.046, +0.948, -0.900, -1.094]
+
+  reward mean : 0.5625  (std 0.5140)
+  GRPO loss   : 29.553152 -> 28.609741 (after one Adam step)
+  mean |dparam|: 6.801e-04  (params moved => backward + step executed)
+```
+
+The one MBPP `FAIL` is a genuinely wrong candidate in the sample set; the
+smoke reproduces the recorded verdict (5/5 match). The GRPO loss drops after
+one Adam step and the parameters move, so the reward -> advantage -> loss ->
+optimizer plumbing is proven end to end on CPU.
+
+**The headline pass@1 gains below are NOT produced by this smoke.** They need
+Qwen2.5-Math-1.5B trained with GRPO on a GPU node (a single 4x H100 80GB box,
+~3 days). The CPU smoke only proves the loop wiring.
+
 ## Results
 
 | Benchmark | Baseline pass@1 | After GRPO | Delta |

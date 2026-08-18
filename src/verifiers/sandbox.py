@@ -17,7 +17,6 @@ Every backend has the same interface: `run(script, timeout, mem_mb)` ->
 from __future__ import annotations
 
 import os
-import resource
 import shutil
 import signal
 import subprocess
@@ -26,6 +25,15 @@ import tempfile
 import time
 from dataclasses import dataclass
 from pathlib import Path
+
+# `resource` is a unix-only stdlib module. On windows it does not exist, so we
+# import it best-effort and fall back to the plain-subprocess path (the
+# wall-clock timeout is the real backstop there). This keeps the code verifier
+# importable and runnable on a clone-and-run CPU box regardless of OS.
+try:
+    import resource
+except ImportError:  # windows
+    resource = None
 
 
 DEFAULT_TIMEOUT_S = 5.0
@@ -48,6 +56,8 @@ def _which(name: str) -> str | None:
 def _rlimit_preexec(mem_mb: int) -> callable:
     """Return a preexec_fn that clamps memory and disables new fd inheritance."""
     def _fn() -> None:
+        if resource is None:  # windows / no rlimit support
+            return
         # kill process if it exceeds mem_mb of virtual memory
         soft = mem_mb * 1024 * 1024
         try:

@@ -1,4 +1,4 @@
-.PHONY: install fmt lint test sft grpo eval clean
+.PHONY: install fmt lint test smoke sft grpo eval clean
 
 install:
 	pip install -e ".[dev]"
@@ -11,6 +11,9 @@ lint:
 
 test:
 	pytest -q
+
+smoke:
+	python scripts/smoke_cpu.py
 
 sft:
 	bash scripts/train_sft_warmup.sh
